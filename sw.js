@@ -1,6 +1,6 @@
 ﻿// ???뚯씪???곗뿉 ??ν빐 ?먭퀬, ?명꽣?룹씠 ?놁뼱???대━寃???二쇰뒗 肄붾뱶.
 // ?깆쓣 怨좎튌 ?뚮쭏???꾨옒 踰꾩쟾 ?レ옄瑜??щ젮 二쇱꽭??
-const CACHE = 'schedule-v6';
+const CACHE = 'schedule-v7';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 const CDN = ['https://www.gstatic.com/firebasejs/', 'https://fonts.googleapis.com/', 'https://fonts.gstatic.com/'];
 

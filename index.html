@@ -87,14 +87,23 @@ textarea#entry { flex: 1; min-width: 0; resize: none; border: 1px solid var(--li
 .chip:hover { border-color: var(--accent); color: var(--accent); }
 .preview { display: flex; flex-direction: column; gap: 4px; }
 .preview-row { display: flex; gap: 8px; align-items: baseline; font-size: 13.5px; flex-wrap: wrap; }
+/* 태그 색: 태그 이름마다 정해진 색상(--h) */
+.tagged { --tbg: hsl(var(--h) 80% 91%); --tfg: hsl(var(--h) 60% 30%); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tagged { --tbg: hsl(var(--h) 35% 24%); --tfg: hsl(var(--h) 85% 80%); } }
+:root[data-theme="dark"] .tagged { --tbg: hsl(var(--h) 35% 24%); --tfg: hsl(var(--h) 85% 80%); }
+.tag { font-size: 11.5px; line-height: 18px; padding: 0 7px; border-radius: 999px; background: var(--tbg); color: var(--tfg); white-space: nowrap; }
+.rep-ico { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; align-self: center; }
 .when { font-family: var(--font-data); font-variant-numeric: tabular-nums; font-size: 12.5px; background: var(--accent-soft); color: var(--accent); border-radius: 6px; padding: 1px 7px; white-space: nowrap; }
 .when.none { background: transparent; color: var(--muted); border: 1px dashed var(--line); }
 .preview-title { min-width: 0; overflow-wrap: anywhere; }
 
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
-.tab { border: 0; background: none; padding: 8px 14px; color: var(--muted); font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab { flex: none; white-space: nowrap; border: 0; background: none; padding: 8px 14px; color: var(--muted); font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); font-weight: 700; }
 .tab .count { font-family: var(--font-data); font-size: 12px; margin-left: 4px; color: var(--muted); }
+.tabs { align-items: center; }
+#search { margin-left: auto; flex: 1 1 auto; max-width: 220px; min-width: 0; width: 100%; height: 34px; margin-bottom: 4px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; }
+#search::placeholder { font-size: 13.5px; }
 
 .group { display: flex; flex-direction: column; gap: 2px; }
 .group h2 { margin: 14px 0 4px; font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: 0.02em; display: flex; gap: 6px; align-items: baseline; }
@@ -125,6 +134,13 @@ textarea#entry { flex: 1; min-width: 0; resize: none; border: 1px solid var(--li
 .edit .full { grid-column: 1 / -1; }
 .edit input[type="text"], .edit input[type="date"], .edit input[type="time"] { font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; min-width: 0; width: 100%; }
 .edit .inline { flex-direction: row; align-items: center; gap: 6px; color: var(--ink); font-size: 13.5px; }
+.edit select { font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; min-width: 0; width: 100%; }
+.wd-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.wd { flex-direction: row !important; }
+.wd input { position: absolute; opacity: 0; pointer-events: none; }
+.wd span { display: grid; place-items: center; width: 36px; height: 32px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); font-size: 13.5px; cursor: pointer; }
+.wd input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 700; }
+.wd input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
 .edit-actions { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; }
 .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 14px; font-size: 13.5px; }
 .btn.solid { background: var(--accent); color: var(--surface); border-color: var(--accent); font-weight: 700; }
@@ -142,7 +158,7 @@ textarea#entry { flex: 1; min-width: 0; resize: none; border: 1px solid var(--li
 .dow { display: grid; grid-template-columns: repeat(7, 1fr); font-size: 12px; color: var(--muted); text-align: center; margin-top: 10px; padding-bottom: 4px; }
 .dow span:first-child { color: var(--sun); }
 .dow span:last-child { color: var(--sat); }
-.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: 26px repeat(3, 19px) 16px; row-gap: 2px; border-top: 1px solid var(--line); position: relative; }
+.cal-week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: 26px repeat(3, 19px) 16px; row-gap: 2px; border-top: 1px solid var(--line); position: relative; }
 .day { grid-row: 1 / -1; border: 0; border-radius: 0; background: none; padding: 3px 0 0; display: flex; justify-content: center; align-items: flex-start; min-width: 0; }
 .day:hover { background: var(--accent-soft); }
 .day[aria-pressed="true"] { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
@@ -154,12 +170,19 @@ textarea#entry { flex: 1; min-width: 0; resize: none; border: 1px solid var(--li
 .bar { pointer-events: none; z-index: 1; margin: 0 2px; padding: 0 5px; font-size: 11px; line-height: 19px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .bar.cont-l { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: 0; }
 .bar.cont-r { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: 0; }
+.bar { pointer-events: auto; cursor: pointer; }
+.bar.tagged { background: var(--tbg); color: var(--tfg); }
 .bar.done { background: transparent; color: var(--muted); text-decoration: line-through; box-shadow: inset 0 0 0 1px var(--line); }
 .bar.late { background: var(--danger-soft); color: var(--danger); }
-.week { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.cal-week { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .day.in-range, .day.dragging { background: var(--accent-soft); }
 .day.dragging { box-shadow: inset 0 0 0 1.5px var(--accent); }
 .cal-tip { font-size: 12px; color: var(--muted); margin-top: 8px; }
+.day.hol .d { color: var(--sun); }
+.day:has(.hol-name) { justify-content: flex-start; gap: 2px; padding-left: 2px; }
+.hol-name { font-size: 10px; line-height: 22px; color: var(--sun); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.hol-tag { font-size: 12px; font-weight: 500; color: var(--sun); margin-left: 4px; }
+@media (max-width: 560px) { .hol-name { display: none; } .day:has(.hol-name) { justify-content: center; padding-left: 0; } }
 .day-panel h3 { margin: 18px 0 2px; font-size: 14px; }
 .quick-add { display: flex; gap: 8px; margin: 8px 0 4px; }
 .quick-add input { flex: 1; min-width: 0; font: inherit; font-size: 16px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
@@ -174,6 +197,8 @@ textarea#entry { flex: 1; min-width: 0; resize: none; border: 1px solid var(--li
 @media (max-width: 480px) {
   .tab { padding: 8px 10px; }
   .bar { font-size: 10px; padding: 0 3px; }
+  .bar .bt { display: none; } /* 폰에서는 막대에 제목만 */
+  #search::placeholder { font-size: 12.5px; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .item, .bar { transition: background-color .15s; }
@@ -220,6 +245,7 @@ textarea#entry { flex: 1; min-width: 0; resize: none; border: 1px solid var(--li
     <button class="tab" role="tab" id="tab-list" data-tab="list">할 일<span class="count" id="count-list"></span></button>
     <button class="tab" role="tab" id="tab-cal" data-tab="cal">달력</button>
     <button class="tab" role="tab" id="tab-done" data-tab="done">완료<span class="count" id="count-done"></span></button>
+    <input type="search" id="search" placeholder="검색 (제목, #태그)" aria-label="일정 검색" autocomplete="off">
   </nav>
 
   <main id="view"></main>
@@ -266,23 +292,75 @@ function nextDayOfMonth(base, day) {
   return null;
 }
 
+/* ---------- 공휴일 (대체공휴일·선거일 포함) ---------- */
+const HOLIDAYS = {
+  '2025-01-01': '신정', '2025-01-27': '임시공휴일', '2025-01-28': '설날 연휴', '2025-01-29': '설날', '2025-01-30': '설날 연휴',
+  '2025-03-01': '삼일절', '2025-03-03': '대체공휴일', '2025-05-05': '어린이날·부처님오신날', '2025-05-06': '대체공휴일',
+  '2025-06-03': '대통령선거', '2025-06-06': '현충일', '2025-08-15': '광복절', '2025-10-03': '개천절',
+  '2025-10-05': '추석 연휴', '2025-10-06': '추석', '2025-10-07': '추석 연휴', '2025-10-08': '대체공휴일', '2025-10-09': '한글날', '2025-12-25': '성탄절',
+  '2026-01-01': '신정', '2026-02-16': '설날 연휴', '2026-02-17': '설날', '2026-02-18': '설날 연휴',
+  '2026-03-01': '삼일절', '2026-03-02': '대체공휴일', '2026-05-05': '어린이날', '2026-05-24': '부처님오신날', '2026-05-25': '대체공휴일',
+  '2026-06-03': '지방선거', '2026-06-06': '현충일', '2026-08-15': '광복절', '2026-08-17': '대체공휴일',
+  '2026-09-24': '추석 연휴', '2026-09-25': '추석', '2026-09-26': '추석 연휴', '2026-10-03': '개천절', '2026-10-05': '대체공휴일',
+  '2026-10-09': '한글날', '2026-12-25': '성탄절',
+  '2027-01-01': '신정', '2027-02-06': '설날 연휴', '2027-02-07': '설날', '2027-02-08': '설날 연휴', '2027-02-09': '대체공휴일',
+  '2027-03-01': '삼일절', '2027-05-05': '어린이날', '2027-05-13': '부처님오신날', '2027-06-06': '현충일',
+  '2027-08-15': '광복절', '2027-08-16': '대체공휴일', '2027-09-14': '추석 연휴', '2027-09-15': '추석', '2027-09-16': '추석 연휴',
+  '2027-10-03': '개천절', '2027-10-04': '대체공휴일', '2027-10-09': '한글날', '2027-10-11': '대체공휴일',
+  '2027-12-25': '성탄절', '2027-12-27': '대체공휴일',
+  '2028-01-01': '신정', '2028-01-25': '설날 연휴', '2028-01-26': '설날', '2028-01-27': '설날 연휴', '2028-03-01': '삼일절',
+  '2028-04-12': '국회의원선거', '2028-05-02': '부처님오신날', '2028-05-05': '어린이날', '2028-06-06': '현충일', '2028-08-15': '광복절',
+  '2028-10-02': '추석 연휴', '2028-10-03': '추석·개천절', '2028-10-04': '추석 연휴', '2028-10-05': '대체공휴일',
+  '2028-10-09': '한글날', '2028-12-25': '성탄절',
+};
+
+/* ---------- 반복 일정 ---------- */
+// repeat = { freq: 'daily'|'weekly'|'monthly'|'yearly', days: [요일 0~6](매주), monthDay: 날짜 또는 -1=말일(매달), until: 'YYYY-MM-DD'(선택) }
+// anchorK(시작일) 이후로 k 날짜가 반복에 해당하는지
+function repHit(rep, anchorK, k) {
+  if (k < anchorK || (rep.until && k > rep.until)) return false;
+  const d = fromKey(k);
+  if (rep.freq === 'daily') return true;
+  if (rep.freq === 'weekly') return (rep.days || []).includes(d.getDay());
+  if (rep.freq === 'monthly') return rep.monthDay === -1 ? addDays(d, 1).getDate() === 1 : d.getDate() === rep.monthDay;
+  if (rep.freq === 'yearly') { const a = fromKey(anchorK); return d.getMonth() === a.getMonth() && d.getDate() === a.getDate(); }
+  return false;
+}
+// base 날짜부터 처음 해당하는 날
+function firstOcc(rep, base) {
+  const a = toKey(base);
+  for (let i = 0; i < 400; i++) { const x = addDays(base, i); if (repHit(rep, a, toKey(x))) return x; }
+  return base;
+}
+
 /* ---------- 문장 → 일정 인식 ---------- */
-function parseLine(line, now = new Date()) {
-  const today = sod(now);
+function parseLine(line, now = new Date(), defDate = null) {
+  const today = sod(now), base0 = defDate ? sod(defDate) : today;
+  const orig = line;
+  // #태그는 먼저 빼 두기
+  let tag = null;
+  line = line.replace(/#([^\s#]+)/g, (m, t) => { if (!tag) tag = t; return ' '.repeat(m.length); });
   let work = line;
   const toks = [];
 
+  // 찾은 부분은 work에서 공백으로 지워서 다음 규칙이 다시 못 잡게 해요.
+  // build가 [앞, 뒤] 두 개를 돌려주면 물결(~) 기준으로 나눠서 기간/시간 범위로 써요.
   function take(re, build) {
     re.lastIndex = 0;
     const found = [];
     let m;
     while ((m = re.exec(work))) found.push(m);
     for (const m of found) {
-      const t = build(m);
-      if (!t) continue;
-      t.i = m.index; t.end = m.index + m[0].length;
-      toks.push(t);
-      work = work.slice(0, t.i) + ' '.repeat(m[0].length) + work.slice(t.end);
+      let ts = build(m);
+      if (!ts) continue;
+      ts = [].concat(ts);
+      const s = m.index, e = s + m[0].length, cut = s + m[0].search(/[~\-–〜]/);
+      ts.forEach((t, k) => {
+        if (ts.length === 2) { t.i = k ? cut + 1 : s; t.end = k ? e : cut; }
+        else { t.i = s; t.end = e; }
+        toks.push(t);
+      });
+      work = work.slice(0, s) + ' '.repeat(m[0].length) + work.slice(e);
     }
   }
   const adjHour = (pre, h) => {
@@ -293,16 +371,46 @@ function parseLine(line, now = new Date()) {
     return h >= 1 && h <= 7 ? h + 12 : h % 24; // 앞에 아무것도 없으면 1~7시는 오후로
   };
 
+  // 반복 (요일·날짜 규칙보다 먼저)
+  let repeat = null;
+  const setRep = r => { if (!repeat) repeat = r; return { type: 'rep' }; };
+  const DAYS = '[월화수목금토일](?:요일)?(?:\\s*[,·/]?\\s*[월화수목금토일](?:요일)?)*';
+  const wds = s => [...new Set(s.replace(/요일/g, '').match(/[월화수목금토일]/g).map(c => WD.indexOf(c)))].sort((a, b) => a - b);
+  take(/매일|날마다/g, () => setRep({ freq: 'daily' }));
+  take(/매주\s*평일|평일\s*마다|매\s*평일/g, () => setRep({ freq: 'weekly', days: [1, 2, 3, 4, 5] }));
+  take(/매주\s*주말|주말\s*마다/g, () => setRep({ freq: 'weekly', days: [0, 6] }));
+  take(new RegExp(`(?<![가-힣])(?:매주\\s*)?(${DAYS})\\s*마다|매주\\s*(${DAYS})(?=$|[\\s,.]|에|은|는)`, 'g'),
+    m => setRep({ freq: 'weekly', days: wds(m[1] || m[2]) }));
+  take(/매주/g, () => setRep({ freq: 'weekly' }));
+  take(/매\s*(?:달|월)\s*(\d{1,2})\s*일/g, m => (+m[1] >= 1 && +m[1] <= 31 ? setRep({ freq: 'monthly', monthDay: +m[1] }) : null));
+  take(/매\s*(?:달|월)\s*말일?/g, () => setRep({ freq: 'monthly', monthDay: -1 }));
+  take(/매\s*(?:달|월(?!요일))|달마다/g, () => setRep({ freq: 'monthly' }));
+  take(/매년|매해|해마다/g, () => setRep({ freq: 'yearly' }));
+
   // 시간
+  const PRE = '(?:(오전|오후|아침|낮|저녁|밤|새벽)\\s*)?';
   take(/(?:(오전|오후|아침|낮|저녁|밤|새벽)\s*)?(?<!\d)([01]?\d|2[0-3]):([0-5]\d)(?!\d)/g, m => {
     const h = m[1] ? adjHour(m[1], +m[2]) : +m[2];
     return { type: 'time', h, mi: +m[3] };
+  });
+  // 9~11시, 오후 2시~4시 반
+  take(new RegExp(`${PRE}(?<![\\d:])(\\d{1,2})(?:\\s*시)?(?:\\s*(\\d{1,2})\\s*분|\\s*(반))?\\s*[~\\-–〜]\\s*${PRE}(\\d{1,2})\\s*시(?!간)(?:\\s*(\\d{1,2})\\s*분|\\s*(반))?`, 'g'), m => {
+    const h1 = adjHour(m[1], +m[2]);
+    let h2 = adjHour(m[5] || m[1], +m[6]);
+    if (h1 == null || h2 == null) return null;
+    const mi1 = m[3] ? +m[3] : m[4] ? 30 : 0, mi2 = m[7] ? +m[7] : m[8] ? 30 : 0;
+    if (h2 * 60 + mi2 <= h1 * 60 + mi1 && h2 < 12) h2 += 12;
+    return [{ type: 'time', h: h1, mi: mi1 }, { type: 'time', h: h2, mi: mi2 }];
   });
   take(/(?:(오전|오후|아침|낮|저녁|밤|새벽)\s*)?(?<!\d)(\d{1,2})\s*시(?!간)(?:\s*(\d{1,2})\s*분|\s*(반))?/g, m => {
     const h = adjHour(m[1], +m[2]);
     if (h == null) return null;
     return { type: 'time', h, mi: m[3] ? +m[3] : m[4] ? 30 : 0 };
   });
+  // 시각 없이 "저녁에", "오전 중" 같은 말만 있을 때
+  take(/(?<![가-힣])(오전|오후|아침|점심|저녁|밤|새벽)(?=$|[\s,.]|에|엔|쯤|께|중)/g, m => ({
+    type: 'time', vague: true, h: { 오전: 9, 아침: 8, 점심: 12, 오후: 14, 저녁: 19, 밤: 21, 새벽: 6 }[m[1]], mi: 0,
+  }));
 
   // 날짜
   take(/(\d{4})\s*(?:년|[.\-\/])\s*(\d{1,2})\s*(?:월|[.\-\/])\s*(\d{1,2})\s*일?/g, m => {
@@ -314,10 +422,32 @@ function parseLine(line, now = new Date()) {
     const d = validDate(t.getFullYear(), t.getMonth() + 1, +m[2]);
     return d && { type: 'date', date: d };
   });
+  // 다음달 첫째주 월요일, 11월 셋째 주 화요일, 이번달 마지막 금요일
+  take(/(?:(이번|다음|담)\s*달|(?<!\d)(\d{1,2})\s*월)\s*(첫째|첫|둘째|두\s*번째|셋째|세\s*번째|넷째|네\s*번째|다섯째|마지막)\s*(?:주|번째\s*주)?\s*([월화수목금토일])요일/g, m => {
+    const n = { 첫: 1, 첫째: 1, 둘째: 2, 두번째: 2, 셋째: 3, 세번째: 3, 넷째: 4, 네번째: 4, 다섯째: 5, 마지막: -1 }[m[3].replace(/\s/g, '')];
+    const wd = WD.indexOf(m[4]);
+    const nth = (y, mo) => {
+      if (n === -1) { const last = new Date(y, mo + 1, 0); return addDays(last, -((last.getDay() - wd + 7) % 7)); }
+      const f = new Date(y, mo, 1);
+      const d = addDays(f, (wd - f.getDay() + 7) % 7 + (n - 1) * 7);
+      return d.getMonth() === f.getMonth() ? d : null;
+    };
+    const y = today.getFullYear();
+    if (!m[2]) return { type: 'date', date: nth(y, today.getMonth() + (m[1] === '이번' ? 0 : 1)) };
+    let d = nth(y, +m[2] - 1);
+    if (d && d < addDays(today, -60)) d = nth(y + 1, +m[2] - 1);
+    return d && { type: 'date', date: d };
+  });
   take(/(이번\s*달|다음\s*달|담\s*달)?\s*(월말|말일)|(이번|다음|담)\s*달\s*말/g, m => {
     const next = /다음|담/.test(m[0]);
     return { type: 'date', date: new Date(today.getFullYear(), today.getMonth() + (next ? 2 : 1), 0) };
   });
+  // 11월 20~25일, 11월 30일~12월 2일
+  take(/(?<!\d)(\d{1,2})\s*월\s*(\d{1,2})\s*일?\s*[~\-–〜]\s*(?:(\d{1,2})\s*월\s*)?(\d{1,2})\s*일/g, m =>
+    [{ type: 'md', m: +m[1], d: +m[2] }, { type: 'md', m: m[3] ? +m[3] : +m[1], d: +m[4] }]);
+  // 11/20~25
+  take(/(?<![\d.\/:])(\d{1,2})\s*[\/.]\s*(\d{1,2})\s*[~\-–〜]\s*(\d{1,2})(?![\d.\/:]|\s*시)(?:\s*일)?/g, m =>
+    (+m[1] >= 1 && +m[1] <= 12 ? [{ type: 'md', m: +m[1], d: +m[2] }, { type: 'md', m: +m[1], d: +m[3] }] : null));
   take(/(?<!\d)(\d{1,2})\s*월\s*(\d{1,2})\s*일/g, m => ({ type: 'md', m: +m[1], d: +m[2] }));
   take(/(?<![\d.\/:])(\d{1,2})\s*[\/.]\s*(\d{1,2})(?![\d.\/:])/g, m => {
     if (+m[1] < 1 || +m[1] > 12 || +m[2] < 1 || +m[2] > 31) return null;
@@ -345,14 +475,22 @@ function parseLine(line, now = new Date()) {
     const monday = addDays(today, -((today.getDay() + 6) % 7));
     return { type: 'date', date: addDays(monday, off * 7 + (wd + 6) % 7) };
   });
+  // 이번 주말, 다음 주말 → 그 주 토요일
+  take(/(?:(이번|다다음|다음|담)\s*)?주말(?=$|[\s,.]|에|엔|은|는|까지|부터)/g, m => {
+    if (!m[1]) return { type: 'date', date: addDays(today, (6 - today.getDay() + 7) % 7) };
+    const monday = addDays(today, -((today.getDay() + 6) % 7));
+    return { type: 'date', date: addDays(monday, 5 + 7 * { 이번: 0, 다음: 1, 담: 1, 다다음: 2 }[m[1]]) };
+  });
   take(/오늘|금일|내일|모레|글피|어제/g, m => ({
     type: 'date', date: addDays(today, { 오늘: 0, 금일: 0, 내일: 1, 모레: 2, 글피: 3, 어제: -1 }[m[0]])
   }));
   take(/(?<![\d월])(\d{1,2})\s*일(?!\s*(?:뒤|후|이후|간|동안|요일))/g, m => (+m[1] >= 1 && +m[1] <= 31 ? { type: 'd', d: +m[1] } : null));
 
   toks.sort((a, b) => a.i - b.i);
-  const dates = toks.filter(t => t.type !== 'time');
-  const times = toks.filter(t => t.type === 'time');
+  const dates = toks.filter(t => t.type !== 'time' && t.type !== 'rep');
+  const allTimes = toks.filter(t => t.type === 'time');
+  const exact = allTimes.filter(t => !t.vague);
+  const times = exact.length ? exact : allTimes;
 
   // 연/월이 빠진 날짜 채우기 (앞 날짜 기준)
   let prev = null;
@@ -372,12 +510,12 @@ function parseLine(line, now = new Date()) {
   // 사이 글자에서 시간 표현을 지운 뒤 확인
   const gapText = (a, b) => {
     let g = line.slice(a, b).split('');
-    for (const t of times) for (let i = Math.max(t.i, a); i < Math.min(t.end, b); i++) g[i - a] = ' ';
+    for (const t of allTimes) for (let i = Math.max(t.i, a); i < Math.min(t.end, b); i++) g[i - a] = ' ';
     return g.join('');
   };
   const isLink = g => /부터|에서|[~\-–〜]/.test(g) && /^[\s부터에서~\-–〜]*$/.test(g);
 
-  const used = [];
+  const used = toks.filter(t => t.type === 'rep' || t.vague);
   let start = null, end = null, due = false;
   if (good.length) {
     const A = good[0], B = good[1];
@@ -390,7 +528,19 @@ function parseLine(line, now = new Date()) {
     const T = times[0], U = times[1];
     time = `${pad(T.h)}:${pad(T.mi)}`; used.push(T);
     if (U && (end || isLink(line.slice(T.end, U.i)))) { endTime = `${pad(U.h)}:${pad(U.mi)}`; used.push(U); }
-    if (!start) start = today; // 시간만 쓰면 오늘
+    if (!start) start = base0; // 시간만 쓰면 오늘(또는 고른 날)
+  }
+
+  // 반복: "~까지"나 기간은 반복이 끝나는 날로 써요
+  if (repeat) {
+    let until = null;
+    if (due && start) { until = start; start = null; due = false; }
+    else if (end) { until = end; end = null; }
+    const b = start || base0;
+    if (repeat.freq === 'weekly' && !repeat.days) repeat.days = [b.getDay()];
+    if (repeat.freq === 'monthly' && !repeat.monthDay) repeat.monthDay = b.getDate();
+    if (until) repeat.until = toKey(until);
+    start = firstOcc(repeat, b);
   }
 
   // 인식한 부분을 빼고 나머지를 제목으로
@@ -405,7 +555,7 @@ function parseLine(line, now = new Date()) {
     .replace(/^[\s,~\-–〜:.]+|[\s,~\-–〜:]+$/g, '')
     .replace(/\s*(해야\s*(됨|됌|함|돼|되|한다|해|할\s*듯)|할\s*것)[\s.!~]*$/, '')
     .trim();
-  if (!title) title = line.trim();
+  if (!title) title = line.replace(/\s+/g, ' ').trim() || orig.trim();
   if (start && /마감|제출|기한/.test(title)) due = true;
 
   return {
@@ -415,12 +565,14 @@ function parseLine(line, now = new Date()) {
     due,
     time,
     endTime,
+    tag,
+    repeat,
   };
 }
 
 /* ---------- 상태 ---------- */
 let items = [], allItems = []; // allItems에는 캘린더에서 지우는 중인 항목도 포함
-const ui = { tab: 'list', month: null, selDay: null, selEnd: null, editing: null, confirmClear: false };
+const ui = { tab: 'list', month: null, selDay: null, selEnd: null, editing: null, confirmClear: false, q: '' };
 try { const t = localStorage.getItem('schedule-tab'); if (['list', 'cal', 'done'].includes(t)) ui.tab = t; } catch (e) {}
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -515,8 +667,23 @@ function fmtDay(k, withYear) {
   const y = withYear || d.getFullYear() !== new Date().getFullYear() ? `${d.getFullYear()}년 ` : '';
   return `${y}${d.getMonth() + 1}월 ${d.getDate()}일 (${WD[d.getDay()]})`;
 }
+function repLabel(it) {
+  const r = it.repeat, s = fromKey(it.start);
+  let t;
+  if (r.freq === 'daily') t = '매일';
+  else if (r.freq === 'weekly') {
+    const ds = (r.days || []).join();
+    t = ds === '1,2,3,4,5' ? '평일마다' : ds === '0,6' ? '주말마다' : '매주 ' + (r.days || []).map(i => WD[i]).join('·');
+  } else if (r.freq === 'monthly') t = r.monthDay === -1 ? '매달 말일' : `매달 ${r.monthDay || s.getDate()}일`;
+  else t = `매년 ${s.getMonth() + 1}월 ${s.getDate()}일`;
+  if (it.end && it.end !== it.start) t += ` (${dayDiff(it.start, it.end) + 1}일간)`;
+  if (it.time) t += ' ' + it.time + (it.endTime ? '~' + it.endTime : '');
+  if (r.until) { const u = fromKey(r.until); t += ` · ${u.getMonth() + 1}/${u.getDate()}까지`; }
+  return t;
+}
 function fmtWhen(it) {
   if (!it.start) return '';
+  if (it.repeat) return repLabel(it);
   let s = fmtDay(it.start);
   if (it.end && it.end !== it.start) {
     const a = fromKey(it.start), b = fromKey(it.end);
@@ -539,25 +706,77 @@ function badge(it) {
 const sortKey = it => (it.start || '9999-99-99') + (it.time || '99:99') + (it.createdAt || '');
 const byWhen = (a, b) => sortKey(a) < sortKey(b) ? -1 : 1;
 
+/* ---------- 반복 일정 펼치기 ---------- */
+const spanDays = it => (it.end ? dayDiff(it.start, it.end) : 0);
+// aK~bK 사이에 걸치는 회차들 (반복이 아니면 자기 자신)
+function occurrences(it, aK, bK) {
+  if (!it.start) return [];
+  if (!it.repeat) return it.start <= bK && (it.end || it.start) >= aK ? [it] : [];
+  const dur = spanDays(it), out = [], stop = fromKey(bK), doneSet = new Set(it.doneDates || []);
+  for (let d = addDays(fromKey(aK), -dur); d <= stop; d = addDays(d, 1)) {
+    const k = toKey(d);
+    if (!repHit(it.repeat, it.start, k)) continue;
+    out.push({ ...it, start: k, end: dur ? toKey(addDays(d, dur)) : null, done: it.done || doneSet.has(k), occ: true });
+  }
+  return out;
+}
+// 오늘 이후 아직 완료 안 한 첫 회차
+function nextOcc(it) {
+  const doneSet = new Set(it.doneDates || []);
+  let d = sod(new Date());
+  if (fromKey(it.start) > d) d = fromKey(it.start);
+  for (let i = 0; i < 400; i++, d = addDays(d, 1)) {
+    const k = toKey(d);
+    if (repHit(it.repeat, it.start, k) && !doneSet.has(k)) return k;
+  }
+  return null;
+}
+// 목록에 보여줄 모습: 반복 일정은 다음 회차 날짜로
+function listView(it) {
+  if (!it.repeat || !it.start) return it;
+  const k = nextOcc(it);
+  if (!k) return { ...it, start: it.repeat.until || it.start, end: null, ended: true };
+  const dur = spanDays(it);
+  return { ...it, start: k, end: dur ? toKey(addDays(fromKey(k), dur)) : null, occ: true };
+}
+
+/* ---------- 태그 색 ---------- */
+const HUES = [212, 145, 28, 280, 335, 178, 48, 0];
+function tagHue(t) { let h = 0; for (const c of t) h = (h * 31 + c.codePointAt(0)) >>> 0; return HUES[h % HUES.length]; }
+const tagChip = t => (t ? `<span class="tag tagged" style="--h:${tagHue(t)}">#${esc(t)}</span>` : '');
+
 const CHECK = '<svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.5L10 3.5"/></svg>';
+const REPEAT_ICON = '<svg class="rep-ico" viewBox="0 0 16 16" aria-label="반복"><path d="M3 7V6a2 2 0 0 1 2-2h7M10 2l2 2-2 2M13 9v1a2 2 0 0 1-2 2H4M6 14l-2-2 2-2"/></svg>';
 function itemHTML(it) {
-  if (ui.editing === it.id) return editHTML(it);
+  if (ui.editing === it.id) return editHTML(items.find(x => x.id === it.id) || it);
+  const occ = it.occ ? ` data-occ="${it.start}"` : '';
+  const when = !it.start ? '<span>날짜 미정</span>'
+    : it.repeat ? `${REPEAT_ICON}<span class="num">${esc(repLabel(it))}</span>${it.ended ? '<span>끝난 반복</span>' : `<span class="num">${esc(fmtDay(it.start))}</span>`}`
+    : `<span class="num">${esc(fmtWhen(it))}</span>`;
   return `<div class="item${it.done ? ' done' : ''}">
-    <button class="check" data-act="toggle" data-id="${it.id}" aria-label="${it.done ? '완료 취소' : '완료로 표시'}">${CHECK}</button>
+    <button class="check" data-act="toggle" data-id="${it.id}"${occ} aria-label="${it.done ? '완료 취소' : it.repeat ? '이번 회차 완료' : '완료로 표시'}">${CHECK}</button>
     <button class="item-body" data-act="edit" data-id="${it.id}">
       <span class="item-title">${esc(it.title)}</span>
-      <span class="meta">${it.start ? `<span class="num">${esc(fmtWhen(it))}</span>` : '<span>날짜 미정</span>'}
-        ${it.due && !it.done ? '<span class="badge due">마감</span>' : ''}${badge(it)}</span>
+      <span class="meta">${tagChip(it.tag)}${when}
+        ${it.due && !it.done ? '<span class="badge due">마감</span>' : ''}${it.ended ? '' : badge(it)}</span>
     </button>
   </div>`;
 }
 function editHTML(it) {
+  const r = it.repeat || {};
+  const days = r.days || (it.start ? [fromKey(it.start).getDay()] : []);
+  const freqs = [['', '안 함'], ['daily', '매일'], ['weekly', '매주'], ['monthly', '매달'], ['yearly', '매년']];
   return `<form class="edit" data-id="${it.id}" id="edit-form">
     <label class="full">할 일<input type="text" id="edit-title" value="${esc(it.title)}"></label>
-    <label>시작 날짜<input type="date" id="edit-start" value="${it.start || ''}"></label>
+    <label>시작 날짜${it.repeat ? ' (반복 시작)' : ''}<input type="date" id="edit-start" value="${it.start || ''}"></label>
     <label>끝 날짜 (기간일 때)<input type="date" id="edit-end" value="${it.end || ''}"></label>
     <label>시간<input type="time" id="edit-time" value="${it.time || ''}"></label>
     <label>끝 시간<input type="time" id="edit-endtime" value="${it.endTime || ''}"></label>
+    <label>태그<input type="text" id="edit-tag" value="${esc(it.tag || '')}" placeholder="예: 회사"></label>
+    <label>반복<select id="edit-repeat">${freqs.map(([v, l]) => `<option value="${v}"${(r.freq || '') === v ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+    <div class="full wd-row" id="edit-days"${r.freq === 'weekly' ? '' : ' hidden'}>${WD.map((w, i) =>
+      `<label class="wd"><input type="checkbox" value="${i}"${days.includes(i) ? ' checked' : ''}><span>${w}</span></label>`).join('')}</div>
+    <label id="edit-until-box"${r.freq ? '' : ' hidden'}>반복 끝나는 날 (비우면 계속)<input type="date" id="edit-until" value="${r.until || ''}"></label>
     <label class="inline full"><input type="checkbox" id="edit-due"${it.due ? ' checked' : ''}> 마감일로 표시</label>
     <div class="edit-actions">
       <button class="btn solid" type="submit">저장</button>
@@ -575,11 +794,12 @@ function render() {
   const open = items.filter(i => !i.done), done = items.filter(i => i.done);
   $('#count-list').textContent = open.length || '';
   $('#count-done').textContent = done.length || '';
-  for (const b of document.querySelectorAll('.tab')) b.setAttribute('aria-selected', String(b.dataset.tab === ui.tab));
+  for (const b of document.querySelectorAll('.tab')) b.setAttribute('aria-selected', String(!ui.q && b.dataset.tab === ui.tab));
   const v = $('#view');
   if (Store.mode === 'loading') { v.innerHTML = `<div class="empty">일정을 불러오는 중이에요.</div>`; return; }
   const q = $('#quick-entry'), qVal = q ? q.value : '', qFocus = !!q && document.activeElement === q;
-  if (ui.tab === 'list') v.innerHTML = listHTML(open);
+  if (ui.q) v.innerHTML = searchHTML();
+  else if (ui.tab === 'list') v.innerHTML = listHTML(open);
   else if (ui.tab === 'cal') v.innerHTML = calHTML();
   else v.innerHTML = doneHTML(done);
   const q2 = $('#quick-entry');
@@ -588,7 +808,18 @@ function render() {
   if (f && document.activeElement === document.body) f.focus();
 }
 
+function searchHTML() {
+  const terms = ui.q.toLowerCase().split(/\s+/).filter(Boolean);
+  const hit = items.filter(it => {
+    const hay = [it.title, it.raw, it.tag ? '#' + it.tag : ''].join(' ').toLowerCase();
+    return terms.every(t => hay.includes(t));
+  }).map(listView).sort(byWhen);
+  if (!hit.length) return `<div class="empty"><strong>‘${esc(ui.q)}’ 검색 결과가 없어요</strong><span>제목이나 #태그로 찾아보세요.</span></div>`;
+  return `<section class="group"><h2>검색 결과<span class="num">${hit.length}</span></h2>${hit.map(itemHTML).join('')}</section>`;
+}
+
 function listHTML(open) {
+  open = open.map(listView);
   if (!open.length) {
     return `<div class="empty"><strong>${items.length ? '남은 일이 없어요' : '아직 적어 둔 일정이 없어요'}</strong>
       <span>위 칸에 아무렇게나 적어 보세요.</span></div>`;
@@ -634,11 +865,12 @@ function calHTML() {
     for (let c = 0; c < 7; c++) {
       const d = addDays(ws, c), k = toKey(d);
       const inRange = ui.selEnd && k >= ui.selDay && k <= ui.selEnd;
-      const cls = ['day', d.getMonth() !== m.getMonth() && 'out', c === 0 && 'sun', c === 6 && 'sat', k === tk && 'today', inRange && 'in-range'].filter(Boolean).join(' ');
-      cells += `<button class="${cls}" style="grid-column:${c + 1}" data-act="pick-day" data-day="${k}" aria-pressed="${k === ui.selDay || k === ui.selEnd}" aria-label="${fmtDay(k)}"><span class="d">${d.getDate()}</span></button>`;
+      const hol = HOLIDAYS[k];
+      const cls = ['day', d.getMonth() !== m.getMonth() && 'out', c === 0 && 'sun', c === 6 && 'sat', hol && 'hol', k === tk && 'today', inRange && 'in-range'].filter(Boolean).join(' ');
+      cells += `<button class="${cls}" style="grid-column:${c + 1}" data-act="pick-day" data-day="${k}" aria-pressed="${k === ui.selDay || k === ui.selEnd}" aria-label="${fmtDay(k)}${hol ? ' ' + hol : ''}"><span class="d">${d.getDate()}</span>${hol ? `<span class="hol-name">${esc(hol)}</span>` : ''}</button>`;
     }
-    // 주 단위로 막대 줄(lane) 배치
-    const evs = dated.filter(i => i.start <= weK && (i.end || i.start) >= wsK)
+    // 주 단위로 막대 줄(lane) 배치 (반복 일정은 이번 주에 해당하는 회차로 펼쳐서)
+    const evs = dated.flatMap(i => occurrences(i, wsK, weK))
       .sort((a, b) => a.start < b.start ? -1 : a.start > b.start ? 1 : ((b.end || b.start) > (a.end || a.start) ? 1 : -1));
     const lanes = [];
     let bars = '';
@@ -648,17 +880,22 @@ function calHTML() {
       let lane = lanes.findIndex(l => l.every(x => x < s || x > e));
       if (lane === -1) { lanes.push([]); lane = lanes.length - 1; }
       for (let x = s; x <= e; x++) lanes[lane].push(x);
-      const late = !it.done && (it.end || it.start) < tk;
-      const cls = ['bar', it.done && 'done', late && 'late', it.start < wsK && 'cont-l', (it.end || it.start) > weK && 'cont-r'].filter(Boolean).join(' ');
-      bars += `<div class="${cls}" style="grid-column:${s + 1} / span ${e - s + 1};grid-row:${lane + 2}">${esc((it.time ? it.time + ' ' : '') + it.title)}</div>`;
+      const late = !it.done && !it.occ && (it.end || it.start) < tk;
+      const cls = ['bar', it.tag && 'tagged', it.done && 'done', late && 'late', it.start < wsK && 'cont-l', (it.end || it.start) > weK && 'cont-r'].filter(Boolean).join(' ');
+      const hue = it.tag ? `;--h:${tagHue(it.tag)}` : '';
+      bars += `<div class="${cls}" role="button" data-act="edit-bar" data-id="${it.id}" data-day="${it.start < wsK ? wsK : it.start}" style="grid-column:${s + 1} / span ${e - s + 1};grid-row:${lane + 2}${hue}">${it.time ? `<span class="bt">${it.time} </span>` : ''}${esc(it.title)}</div>`;
     }
     // 일정이 많은 주는 줄 수만큼 칸을 늘려서 전부 보여줘요 (최소 3줄)
-    html += `<div class="week" style="grid-template-rows:26px repeat(${Math.max(3, lanes.length)}, 19px) 6px">${cells}${bars}</div>`;
+    html += `<div class="cal-week" style="grid-template-rows:26px repeat(${Math.max(3, lanes.length)}, 19px) 6px">${cells}${bars}</div>`;
   }
-  html += `<div class="cal-tip">날짜를 누르면 그 날에 바로 추가할 수 있어요. 길게 누른 채로 끌면 여러 날을 고를 수 있어요.</div>`;
+  html += `<div class="cal-tip">날짜를 누르면 그 날에 바로 추가할 수 있어요. 길게 누른 채로 끌면 여러 날을 고를 수 있어요. 막대를 누르면 수정해요.</div>`;
   const sel = ui.selDay, selEnd = ui.selEnd;
-  const onDay = items.filter(i => i.start && i.start <= (selEnd || sel) && (i.end || i.start) >= sel).sort(byWhen);
-  html += `<section class="day-panel group"><h3>${esc(fmtWhen({ start: sel, end: selEnd }))}</h3>
+  // 반복 일정은 고른 범위에서 처음 나오는 회차 하나만
+  const seen = new Set();
+  const onDay = items.flatMap(i => occurrences(i, sel, selEnd || sel))
+    .filter(o => !seen.has(o.id) && seen.add(o.id)).sort(byWhen);
+  const hol = !selEnd && HOLIDAYS[sel] ? ` <span class="hol-tag">${esc(HOLIDAYS[sel])}</span>` : '';
+  html += `<section class="day-panel group"><h3>${esc(fmtWhen({ start: sel, end: selEnd }))}${hol}</h3>
     <div class="quick-add">
       <input type="text" id="quick-entry" enterkeyhint="done" autocomplete="off" aria-label="선택한 날짜에 추가할 일정"
         placeholder="${selEnd ? '이 기간 일정 (예: 제주 여행)' : '이 날 일정 (예: 3시 회의)'}">
@@ -689,8 +926,9 @@ function renderPreview() {
   p.hidden = !lines.length;
   p.innerHTML = lines.map(l => {
     const r = parseLine(l);
-    const when = r.start ? fmtWhen(r) + (r.due ? ' 마감' : '') : '날짜 없음';
-    return `<div class="preview-row"><span class="when${r.start ? '' : ' none'}">${esc(when)}</span><span class="preview-title">${esc(r.title)}</span></div>`;
+    const when = !r.start ? '날짜 없음'
+      : fmtWhen(r) + (r.repeat ? ` · 첫 회 ${fmtDay(r.start)}` : '') + (r.due ? ' 마감' : '');
+    return `<div class="preview-row"><span class="when${r.start ? '' : ' none'}">${esc(when)}</span>${tagChip(r.tag)}<span class="preview-title">${esc(r.title)}</span></div>`;
   }).join('');
   entry.style.height = 'auto';
   entry.style.height = Math.min(entry.scrollHeight + 2, 180) + 'px';
@@ -709,6 +947,13 @@ async function submitEntry() {
   if (ok < lines.length) { entry.value = lines.join('\n'); renderPreview(); }
 }
 entry.addEventListener('input', renderPreview);
+$('#search').addEventListener('input', e => { ui.q = e.target.value.trim(); ui.editing = null; render(); });
+// 수정 창: 반복 종류에 따라 요일/끝나는 날 칸 보이기
+document.addEventListener('change', e => {
+  if (e.target.id !== 'edit-repeat') return;
+  $('#edit-days').hidden = e.target.value !== 'weekly';
+  $('#edit-until-box').hidden = !e.target.value;
+});
 entry.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); touchCalendar(); submitEntry(); }
 });
@@ -728,6 +973,7 @@ document.addEventListener('click', async e => {
   const tab = e.target.closest('.tab');
   if (tab) {
     ui.tab = tab.dataset.tab; ui.editing = null; ui.confirmClear = false;
+    ui.q = ''; $('#search').value = '';
     try { localStorage.setItem('schedule-tab', ui.tab); } catch (err) {}
     render(); return;
   }
@@ -737,9 +983,30 @@ document.addEventListener('click', async e => {
   if (['toggle', 'delete', 'clear-done-yes', 'quick-add'].includes(el.dataset.act)) touchCalendar();
   switch (el.dataset.act) {
     case 'cal-sync': calPausedUntil = 0; tokenOk() ? syncCalendar() : requestToken(); break;
-    case 'toggle':
-      if (it) await safe(Store.update(id, it.done ? { done: false, doneAt: null } : { done: true, doneAt: new Date().toISOString() }));
+    case 'toggle': {
+      if (!it) break;
+      if (it.repeat && !it.done) {
+        // 반복 일정은 그 회차만 완료 처리
+        const k = el.dataset.occ || nextOcc(it);
+        if (!k) break;
+        const before = it.doneDates || [], set = new Set(before);
+        const undo = set.has(k);
+        undo ? set.delete(k) : set.add(k);
+        Store.update(id, { doneDates: [...set].sort() });
+        if (!undo) toast(`${fmtDay(k)} 회차를 완료했어요`, () => Store.update(id, { doneDates: before }));
+        break;
+      }
+      await safe(Store.update(id, it.done ? { done: false, doneAt: null } : { done: true, doneAt: new Date().toISOString() }));
       break;
+    }
+    case 'edit-bar': {
+      // 막대를 누르면 그 날을 고르고 아래에 수정 창을 열어요
+      const under = e.clientX || e.clientY ? dayAt(e.clientX, e.clientY) : null;
+      ui.selDay = under ? under.dataset.day : el.dataset.day; ui.selEnd = null; ui.editing = id;
+      render();
+      $('#edit-form')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      break;
+    }
     case 'edit': ui.editing = id; render(); break;
     case 'cancel': ui.editing = null; render(); break;
     case 'delete': {
@@ -786,7 +1053,32 @@ document.addEventListener('submit', async e => {
   if (end && end < start) [start, end] = [end, start];
   if (end === start) end = null;
   const time = $('#edit-time').value || null;
-  const patch = { title: title || '(제목 없음)', start, end, time, endTime: time ? $('#edit-endtime').value || null : null, due: $('#edit-due').checked && !!start };
+  const old = items.find(x => x.id === id) || {};
+  const freq = $('#edit-repeat').value;
+  let repeat = null;
+  if (freq) {
+    if (!start) start = todayKey();
+    const sd = fromKey(start), dur = end ? dayDiff(start, end) : 0;
+    repeat = { freq };
+    if (freq === 'weekly') {
+      const ds = [...document.querySelectorAll('#edit-days input:checked')].map(x => +x.value);
+      repeat.days = ds.length ? ds : [sd.getDay()];
+    }
+    if (freq === 'monthly') {
+      const wasLast = old.repeat?.freq === 'monthly' && old.repeat.monthDay === -1;
+      repeat.monthDay = wasLast && addDays(sd, 1).getDate() === 1 ? -1 : sd.getDate();
+    }
+    const until = $('#edit-until').value;
+    if (until) repeat.until = until;
+    start = toKey(firstOcc(repeat, sd)); // 시작일을 실제 첫 회차로 맞추기
+    end = dur ? toKey(addDays(fromKey(start), dur)) : null;
+  }
+  const patch = {
+    title: title || '(제목 없음)', start, end, time, endTime: time ? $('#edit-endtime').value || null : null,
+    due: $('#edit-due').checked && !!start,
+    tag: $('#edit-tag').value.trim().replace(/^#+/, '').replace(/\s+/g, '') || null,
+    repeat, doneDates: repeat ? old.doneDates || [] : null,
+  };
   ui.editing = null;
   if (await safe(Store.update(id, patch))) toast('수정했어요');
   render();
@@ -799,13 +1091,18 @@ function quickAdd() {
   if (!inp) return;
   const text = inp.value.trim();
   if (!text) { inp.focus(); return; }
-  const r = parseLine(text);
+  const r = parseLine(text, new Date(), fromKey(ui.selDay));
   inp.value = '';
-  Store.add({
-    title: r.title, start: ui.selDay, end: ui.selEnd || null, due: !ui.selEnd && r.due,
-    time: r.time, endTime: r.endTime, raw: text, done: false, createdAt: new Date().toISOString(),
-  });
-  toast(`${fmtWhen({ start: ui.selDay, end: ui.selEnd })}에 추가했어요`);
+  let data;
+  if (r.repeat) {
+    // "매주 회의"처럼 반복이면 고른 날부터 시작, 기간을 골랐으면 그 끝날까지 반복
+    if (ui.selEnd && !r.repeat.until) r.repeat.until = ui.selEnd;
+    data = { ...r, end: null };
+  } else {
+    data = { ...r, start: ui.selDay, end: ui.selEnd || null, due: !ui.selEnd && r.due };
+  }
+  Store.add({ ...data, raw: text, done: false, createdAt: new Date().toISOString() });
+  toast(`${fmtWhen(data)}에 추가했어요`);
 }
 document.addEventListener('keydown', e => {
   if (e.target.id !== 'quick-entry' || e.key !== 'Enter' || e.isComposing || e.keyCode === 229) return;
@@ -813,7 +1110,8 @@ document.addEventListener('keydown', e => {
 });
 
 let drag = null; // { a: 시작 날짜, b: 지금 손가락이 있는 날짜, mouse }
-const dayAt = (x, y) => document.elementFromPoint(x, y)?.closest('.day[data-day]');
+// 막대가 날짜 칸을 덮고 있어도 그 아래 날짜 칸을 찾아요
+const dayAt = (x, y) => document.elementsFromPoint(x, y).find(el => el.matches('.day[data-day]'));
 const dragSpan = () => drag.a <= drag.b ? [drag.a, drag.b] : [drag.b, drag.a];
 function paintDrag() {
   const [s, e] = dragSpan();
@@ -833,8 +1131,8 @@ function finishDrag() {
 
 // 마우스: 누른 채로 바로 끌기
 document.addEventListener('pointerdown', e => {
-  if (e.pointerType !== 'mouse' || e.button !== 0) return;
-  const d = e.target.closest('.day[data-day]');
+  if (e.pointerType !== 'mouse' || e.button !== 0 || !e.target.closest('.cal-week')) return;
+  const d = dayAt(e.clientX, e.clientY);
   if (!d) return;
   e.preventDefault(); // 끄는 동안 글자가 선택되지 않게
   drag = { a: d.dataset.day, b: d.dataset.day, mouse: true, moved: false };
@@ -848,11 +1146,12 @@ document.addEventListener('pointerup', () => {
 // 터치: 살짝 길게(0.3초) 누른 뒤 끌기. 바로 끌면 원래처럼 화면이 스크롤돼요.
 let press = null;
 document.addEventListener('touchstart', e => {
-  const d = e.target.closest?.('.day[data-day]');
   if (press) clearTimeout(press.timer);
   press = null;
-  if (!d || e.touches.length > 1) return;
-  const t = e.touches[0], day = d.dataset.day;
+  if (e.touches.length > 1 || !e.target.closest?.('.cal-week')) return;
+  const t = e.touches[0], d = dayAt(t.clientX, t.clientY);
+  if (!d) return;
+  const day = d.dataset.day;
   press = { x: t.clientX, y: t.clientY, timer: setTimeout(() => {
     press = null;
     drag = { a: day, b: day, mouse: false };
@@ -875,7 +1174,7 @@ document.addEventListener('touchcancel', () => {
   if (press) { clearTimeout(press.timer); press = null; }
   if (drag && !drag.mouse) { drag = null; render(); }
 });
-document.addEventListener('contextmenu', e => { if (e.target.closest?.('.week')) e.preventDefault(); }); // 길게 누를 때 메뉴 안 뜨게
+document.addEventListener('contextmenu', e => { if (e.target.closest?.('.cal-week')) e.preventDefault(); }); // 길게 누를 때 메뉴 안 뜨게
 
 /* ---------- 구글 캘린더 연동 (일정 수첩 → 기본 캘린더, 한 방향) ---------- */
 const GOOGLE_CLIENT_ID = '921720714025-p6r6vg4og5vbd7k8c84b8f60le5uur6o.apps.googleusercontent.com';
@@ -888,7 +1187,21 @@ const tokenOk = () => !!gToken && Date.now() < gExp;
 // 일정마다 고정된 캘린더 일정 ID: 여러 기기에서 동시에 보내도 중복으로 안 들어가요
 const eventId = id => 'sn' + Array.from(new TextEncoder().encode(id), b => b.toString(16).padStart(2, '0')).join('');
 // 캘린더에 마지막으로 보낸 내용(gSig)과 지금 내용이 다르면 다시 보내요
-const calSig = it => it.start ? JSON.stringify([it.title, it.start, it.end || null, it.time || null, it.endTime || null, !!it.due, !!it.done]) : 'none';
+const calSig = it => {
+  if (!it.start) return 'none';
+  const s = [it.title, it.start, it.end || null, it.time || null, it.endTime || null, !!it.due, !!it.done];
+  if (it.repeat) s.push(it.repeat); // 반복 없는 기존 일정은 서명이 그대로라 다시 안 보내요
+  return JSON.stringify(s);
+};
+// 반복 규칙 → 구글 캘린더 RRULE
+function rrule(it) {
+  const r = it.repeat, sd = fromKey(it.start), BY = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+  let rule = 'RRULE:FREQ=' + { daily: 'DAILY', weekly: 'WEEKLY', monthly: 'MONTHLY', yearly: 'YEARLY' }[r.freq];
+  if (r.freq === 'weekly') rule += ';BYDAY=' + (r.days || [sd.getDay()]).map(i => BY[i]).join(',');
+  if (r.freq === 'monthly') rule += ';BYMONTHDAY=' + (r.monthDay || sd.getDate());
+  if (r.until) rule += ';UNTIL=' + r.until.replace(/-/g, '') + (it.time ? 'T145959Z' : ''); // 한국 시간 23:59:59
+  return rule;
+}
 const needsCal = it => it.deleted || calSig(it) !== (it.gSig || 'none');
 
 function eventBody(it) {
@@ -910,6 +1223,7 @@ function eventBody(it) {
     summary: (it.done ? '[완료] ' : '') + (it.due ? '[마감] ' : '') + it.title,
     description: '일정 수첩에서 넣은 일정' + (it.raw ? '\n원문: ' + it.raw : ''),
     start, end, status: 'confirmed',
+    recurrence: it.repeat ? [rrule(it)] : [], // 빈 배열이면 반복을 껐을 때 구글 쪽 반복도 지워져요
   };
 }
 
