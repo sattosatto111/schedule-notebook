@@ -68,6 +68,8 @@ h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
 .login strong { font-size: 17px; }
 .login p { margin: 0; color: var(--muted); font-size: 14px; max-width: 34ch; }
 .login .btn-primary { display: inline-flex; align-items: center; gap: 8px; }
+.cal-row { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.head-right { flex-wrap: wrap; justify-content: flex-end; }
 
 .composer { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .composer-row { display: flex; gap: 8px; align-items: flex-end; }
@@ -176,6 +178,7 @@ textarea#entry { flex: 1; min-width: 0; resize: none; border: 1px solid var(--li
     </div>
     <div class="head-right">
       <span class="sync" id="sync" data-state="loading">로그인 확인 중</span>
+      <button class="link-btn" id="cal-btn" hidden>캘린더 연결</button>
       <button class="link-btn" id="logout" hidden>로그아웃</button>
     </div>
   </header>
@@ -199,6 +202,7 @@ textarea#entry { flex: 1; min-width: 0; resize: none; border: 1px solid var(--li
   </section>
 
   <div id="notice"></div>
+  <div id="cal-notice"></div>
 
   <nav class="tabs" role="tablist">
     <button class="tab" role="tab" id="tab-list" data-tab="list">할 일<span class="count" id="count-list"></span></button>
@@ -210,6 +214,7 @@ textarea#entry { flex: 1; min-width: 0; resize: none; border: 1px solid var(--li
   </div>
 </div>
 <div class="toast" id="toast" hidden></div>
+<script src="https://accounts.google.com/gsi/client" async></script>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js';
@@ -393,7 +398,7 @@ function parseLine(line, now = new Date()) {
 }
 
 /* ---------- 상태 ---------- */
-let items = [];
+let items = [], allItems = []; // allItems에는 캘린더에서 지우는 중인 항목도 포함
 const ui = { tab: 'list', month: null, selDay: null, editing: null, confirmClear: false };
 try { const t = localStorage.getItem('schedule-tab'); if (['list', 'cal', 'done'].includes(t)) ui.tab = t; } catch (e) {}
 const $ = s => document.querySelector(s);
@@ -431,11 +436,11 @@ window.addEventListener('offline', updateSync);
 
 onAuthStateChanged(auth, user => {
   if (unsub) { unsub(); unsub = null; }
-  items = [];
+  items = []; allItems = []; gToken = null;
   $('#login').hidden = !!user;
   $('#app').hidden = !user;
   $('#logout').hidden = !user;
-  if (!user) { Store.mode = 'signedout'; setSync('signedout'); return; }
+  if (!user) { Store.mode = 'signedout'; setSync('signedout'); renderCal(); return; }
   Store.mode = 'loading';
   updateSync();
   render();
@@ -448,7 +453,9 @@ onAuthStateChanged(auth, user => {
     lastMeta = snap.metadata;
     updateSync();
     if (!first && !snap.docChanges().length) return; // 저장 상태만 바뀐 경우
-    items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    allItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    items = allItems.filter(i => !i.deleted);
+    syncCalendar();
     const form = $('#edit-form');
     if (form && form.contains(document.activeElement)) return; // 고치는 중이면 입력을 날리지 않기
     render();
@@ -676,9 +683,9 @@ async function submitEntry() {
 }
 entry.addEventListener('input', renderPreview);
 entry.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); submitEntry(); }
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); touchCalendar(); submitEntry(); }
 });
-$('#add-btn').addEventListener('click', submitEntry);
+$('#add-btn').addEventListener('click', () => { touchCalendar(); submitEntry(); });
 $('#hint').insertAdjacentHTML('beforeend', examplesHTML());
 
 let toastTimer;
@@ -703,7 +710,9 @@ document.addEventListener('click', async e => {
   const el = e.target.closest('[data-act]');
   if (!el) return;
   const id = el.dataset.id, it = items.find(x => x.id === id);
+  if (['toggle', 'delete', 'clear-done-yes'].includes(el.dataset.act)) touchCalendar();
   switch (el.dataset.act) {
+    case 'cal-sync': tokenOk() ? syncCalendar() : requestToken(); break;
     case 'toggle':
       if (it) await safe(Store.update(id, it.done ? { done: false, doneAt: null } : { done: true, doneAt: new Date().toISOString() }));
       break;
@@ -711,9 +720,14 @@ document.addEventListener('click', async e => {
     case 'cancel': ui.editing = null; render(); break;
     case 'delete': {
       if (!it) break;
-      const { id: _, ...copy } = it;
+      const { id: _, gSig, deleted, ...copy } = it;
       ui.editing = null;
-      if (await safe(Store.remove(id))) toast('삭제했어요', () => safe(Store.add(copy)));
+      removeItem(it);
+      render();
+      toast('삭제했어요', () => {
+        if (allItems.some(x => x.id === id)) Store.update(id, { deleted: false });
+        else Store.add(copy);
+      });
       break;
     }
     case 'pick-day': ui.selDay = el.dataset.day; ui.editing = null; render(); break;
@@ -724,7 +738,7 @@ document.addEventListener('click', async e => {
     case 'clear-done-no': ui.confirmClear = false; render(); break;
     case 'clear-done-yes': {
       ui.confirmClear = false;
-      for (const d of items.filter(x => x.done)) await safe(Store.remove(d.id));
+      for (const d of items.filter(x => x.done)) removeItem(d);
       render(); toast('완료한 일을 모두 지웠어요');
       break;
     }
@@ -733,6 +747,7 @@ document.addEventListener('click', async e => {
 document.addEventListener('submit', async e => {
   if (e.target.id !== 'edit-form') return;
   e.preventDefault();
+  touchCalendar();
   const id = e.target.dataset.id;
   const title = $('#edit-title').value.trim();
   let start = $('#edit-start').value || null, end = $('#edit-end').value || null;
@@ -746,7 +761,142 @@ document.addEventListener('submit', async e => {
   render();
 });
 
+/* ---------- 구글 캘린더 연동 (일정 수첩 → 기본 캘린더, 한 방향) ---------- */
+const GOOGLE_CLIENT_ID = '921720714025-p6r6vg4og5vbd7k8c84b8f60le5uur6o.apps.googleusercontent.com';
+const CAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+const CAL_API = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
+let gToken = null, gExp = 0, tokenClient = null, calBusy = false, calAgain = false, calPausedUntil = 0, calError = '';
+const calOn = () => { try { return localStorage.getItem('cal-on') === '1'; } catch (e) { return false; } };
+const setCalOn = v => { try { v ? localStorage.setItem('cal-on', '1') : localStorage.removeItem('cal-on'); } catch (e) {} };
+const tokenOk = () => !!gToken && Date.now() < gExp;
+// 일정마다 고정된 캘린더 일정 ID: 여러 기기에서 동시에 보내도 중복으로 안 들어가요
+const eventId = id => 'sn' + Array.from(new TextEncoder().encode(id), b => b.toString(16).padStart(2, '0')).join('');
+// 캘린더에 마지막으로 보낸 내용(gSig)과 지금 내용이 다르면 다시 보내요
+const calSig = it => it.start ? JSON.stringify([it.title, it.start, it.end || null, it.time || null, it.endTime || null, !!it.due, !!it.done]) : 'none';
+const needsCal = it => it.deleted || calSig(it) !== (it.gSig || 'none');
+
+function eventBody(it) {
+  const last = it.end || it.start;
+  let start, end;
+  if (!it.time) {
+    start = { date: it.start };
+    end = { date: toKey(addDays(fromKey(last), 1)) }; // 종일 일정은 끝 날짜 다음 날까지로 적어야 해요
+  } else {
+    const at = (k, t) => { const [h, m] = t.split(':').map(Number); const d = fromKey(k); d.setHours(h, m); return d; };
+    const s = at(it.start, it.time);
+    let e = it.endTime ? at(last, it.endTime) : new Date(at(last, it.time).getTime() + 3600000);
+    if (e <= s) e = new Date(s.getTime() + 3600000);
+    const fmt = d => `${toKey(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+    start = { dateTime: fmt(s), timeZone: 'Asia/Seoul' };
+    end = { dateTime: fmt(e), timeZone: 'Asia/Seoul' };
+  }
+  return {
+    summary: (it.done ? '[완료] ' : '') + (it.due ? '[마감] ' : '') + it.title,
+    description: '일정 수첩에서 넣은 일정' + (it.raw ? '\n원문: ' + it.raw : ''),
+    start, end, status: 'confirmed',
+  };
+}
+
+async function gcal(method, url, body) {
+  const res = await fetch(url, {
+    method,
+    headers: { Authorization: 'Bearer ' + gToken, 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (res.status === 401) { gToken = null; throw { auth: true }; }
+  return res;
+}
+async function pushOne(it) {
+  const url = CAL_API + '/' + eventId(it.id);
+  const sent = it.gSig && it.gSig !== 'none';
+  if (it.deleted || !it.start) {
+    if (sent) {
+      const r = await gcal('DELETE', url);
+      if (!r.ok && r.status !== 404 && r.status !== 410) throw r;
+    }
+    if (it.deleted) Store.remove(it.id); else Store.update(it.id, { gSig: 'none' });
+    return;
+  }
+  const body = eventBody(it);
+  let r = sent ? await gcal('PATCH', url, body) : await gcal('POST', CAL_API, { id: eventId(it.id), ...body });
+  if (sent && (r.status === 404 || r.status === 410)) r = await gcal('POST', CAL_API, { id: eventId(it.id), ...body });
+  else if (!sent && r.status === 409) r = await gcal('PATCH', url, body); // 이미 있으면 고치기
+  if (!r.ok) throw r;
+  Store.update(it.id, { gSig: calSig(it) });
+}
+
+async function syncCalendar() {
+  renderCal();
+  if (!GOOGLE_CLIENT_ID || !calOn() || !tokenOk() || !col || !navigator.onLine || Date.now() < calPausedUntil) return;
+  if (calBusy) { calAgain = true; return; }
+  calBusy = true; calError = ''; renderCal();
+  try {
+    for (const it of allItems.filter(needsCal)) await pushOne(it);
+  } catch (e) {
+    if (!(e && e.auth)) {
+      calPausedUntil = Date.now() + 60000; // 실패하면 1분 쉬었다가 다시
+      calError = e && e.status === 403
+        ? '구글 캘린더에 접근할 수 없어요. Google Cloud에서 Calendar API를 켰는지 확인해 주세요.'
+        : '구글 캘린더에 반영하지 못했어요. 잠시 후 [지금 반영]을 눌러 주세요.';
+    }
+  } finally {
+    calBusy = false; renderCal();
+    if (calAgain) { calAgain = false; setTimeout(syncCalendar, 500); }
+  }
+}
+
+function requestToken() {
+  if (!window.google?.accounts?.oauth2) { toast('구글 연결 도구를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'); return; }
+  if (!tokenClient) tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: CAL_SCOPE,
+    callback: r => {
+      if (!r.access_token) { toast('캘린더 연결이 취소됐어요'); return; }
+      gToken = r.access_token;
+      gExp = Date.now() + (Number(r.expires_in || 3600) - 120) * 1000;
+      if (!calOn()) { setCalOn(true); toast('구글 캘린더에 연결했어요. 일정을 보내는 중이에요.'); }
+      calPausedUntil = 0;
+      syncCalendar();
+    },
+    error_callback: () => toast('캘린더 연결 창이 닫혔어요. 다시 눌러 주세요.'),
+  });
+  const email = auth.currentUser?.email || undefined;
+  tokenClient.requestAccessToken({ prompt: calOn() ? '' : 'consent', hint: email, login_hint: email });
+}
+// 버튼을 누른 순간에만 구글 확인 창을 띄울 수 있어서, 권한이 만료됐으면 사용자 동작 때 다시 받아요
+function touchCalendar() { if (GOOGLE_CLIENT_ID && calOn() && !tokenOk()) requestToken(); }
+
+function removeItem(it) {
+  // 캘린더에 들어간 일정은 표시만 해 두고, 캘린더에서 지운 다음에 진짜로 지워요
+  if (it.gSig && it.gSig !== 'none') { Store.update(it.id, { deleted: true }); syncCalendar(); }
+  else Store.remove(it.id);
+}
+
+function renderCal() {
+  const btn = $('#cal-btn');
+  btn.hidden = !GOOGLE_CLIENT_ID || Store.mode === 'signedout';
+  btn.textContent = calOn() ? '캘린더 연결 끊기' : '캘린더 연결';
+  const box = $('#cal-notice');
+  if (!GOOGLE_CLIENT_ID || !calOn() || Store.mode !== 'ready') { box.innerHTML = ''; return; }
+  const n = allItems.filter(needsCal).length;
+  if (!n) { box.innerHTML = ''; return; }
+  box.innerHTML = calBusy
+    ? `<div class="notice soft">구글 캘린더에 반영하는 중이에요 (${n}개)</div>`
+    : `<div class="notice ${calError ? '' : 'soft'} cal-row"><span>${esc(calError || `구글 캘린더에 아직 반영 안 된 일정이 ${n}개 있어요.`)}</span><button class="btn solid" data-act="cal-sync">지금 반영</button></div>`;
+}
+
+$('#cal-btn').addEventListener('click', () => {
+  if (!calOn()) { requestToken(); return; }
+  setCalOn(false);
+  if (gToken && window.google?.accounts?.oauth2) google.accounts.oauth2.revoke(gToken, () => {});
+  gToken = null;
+  renderCal();
+  toast('캘린더 연결을 끊었어요. 이미 들어간 일정은 캘린더에 남아 있어요.');
+});
+window.addEventListener('online', syncCalendar);
+
 render();
+renderCal();
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
 </body>

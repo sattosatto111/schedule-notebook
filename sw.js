@@ -1,6 +1,6 @@
 // 앱 파일을 폰에 저장해 두고, 인터넷이 없어도 열리게 해 주는 코드.
 // 앱을 고칠 때마다 아래 버전 숫자를 올려 주세요.
-const CACHE = 'schedule-v1';
+const CACHE = 'schedule-v2';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 const CDN = ['https://www.gstatic.com/firebasejs/', 'https://fonts.googleapis.com/', 'https://fonts.gstatic.com/'];
 
