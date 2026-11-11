@@ -63,7 +63,13 @@ h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
 .sync[data-state="error"]::before, .sync[data-state="slow"]::before { background: var(--danger); }
 .sync[data-state="offline"]::before, .sync[data-state="saving"]::before { background: var(--hl-bg); }
 .head-right { display: flex; align-items: center; gap: 10px; }
-.link-btn { border: 0; background: none; padding: 0; font-size: 12px; color: var(--muted); text-decoration: underline; }
+.head-btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 14px; font-weight: 500; white-space: nowrap; }
+.head-btn svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.head-btn:hover { border-color: var(--accent); color: var(--accent); }
+#cal-btn[data-on="0"] { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 700; }
+#cal-btn[data-on="0"]:hover { filter: brightness(1.08); color: var(--surface); }
+#cal-btn[data-on="1"] { color: var(--ok); border-color: var(--ok); }
+#cal-btn[data-on="1"]:hover { color: var(--danger); border-color: var(--danger); }
 .login { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 32px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
 .login strong { font-size: 17px; }
 .login p { margin: 0; color: var(--muted); font-size: 14px; max-width: 34ch; }
@@ -151,7 +157,13 @@ textarea#entry { flex: 1; min-width: 0; resize: none; border: 1px solid var(--li
 .bar.done { background: transparent; color: var(--muted); text-decoration: line-through; box-shadow: inset 0 0 0 1px var(--line); }
 .bar.late { background: var(--danger-soft); color: var(--danger); }
 .more { pointer-events: none; z-index: 1; font-size: 10.5px; color: var(--muted); text-align: center; line-height: 16px; }
+.week { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.day.in-range, .day.dragging { background: var(--accent-soft); }
+.day.dragging { box-shadow: inset 0 0 0 1.5px var(--accent); }
+.cal-tip { font-size: 12px; color: var(--muted); margin-top: 8px; }
 .day-panel h3 { margin: 18px 0 2px; font-size: 14px; }
+.quick-add { display: flex; gap: 8px; margin: 8px 0 4px; }
+.quick-add input { flex: 1; min-width: 0; font: inherit; font-size: 16px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
 
 .notice { font-size: 13px; padding: 10px 12px; border-radius: 10px; background: var(--danger-soft); color: var(--ink); }
 .notice.soft { background: var(--accent-soft); }
@@ -178,8 +190,9 @@ textarea#entry { flex: 1; min-width: 0; resize: none; border: 1px solid var(--li
     </div>
     <div class="head-right">
       <span class="sync" id="sync" data-state="loading">로그인 확인 중</span>
-      <button class="link-btn" id="cal-btn" hidden>캘린더 연결</button>
-      <button class="link-btn" id="logout" hidden>로그아웃</button>
+      <button class="head-btn" id="cal-btn" hidden>캘린더 연결</button>
+      <button class="head-btn" id="logout" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11"/></svg>로그아웃</button>
     </div>
   </header>
 
@@ -197,7 +210,7 @@ textarea#entry { flex: 1; min-width: 0; resize: none; border: 1px solid var(--li
     </div>
     <div class="preview" id="preview" hidden></div>
     <div class="hint" id="hint">
-      <span>날짜를 섞어서 쓰면 알아서 정리해요. 여러 줄을 한 번에 붙여넣어도 돼요.</span>
+      <span>날짜를 섞어서 쓰면 알아서 정리해요. 1104처럼 숫자로만 써도 돼요. 여러 줄을 한 번에 붙여넣어도 돼요.</span>
     </div>
   </section>
 
@@ -311,6 +324,15 @@ function parseLine(line, now = new Date()) {
     if (+m[1] < 1 || +m[1] > 12 || +m[2] < 1 || +m[2] > 31) return null;
     return { type: 'md', m: +m[1], d: +m[2] };
   });
+  // 숫자만 붙여 쓴 날짜: 20261104, 1104 (월 2자리 + 일 2자리)
+  take(/(?<![\d.\/:])(\d{4})(\d{2})(\d{2})(?![\d.\/:])/g, m => {
+    const d = validDate(+m[1], +m[2], +m[3]);
+    return d && { type: 'date', date: d };
+  });
+  take(/(?<![\d.\/:])(\d{2})(\d{2})(?![\d.\/:%년원개명번호시분초회등위층a-zA-Z])/g, m => { // 1104호, 1104원처럼 단위가 바로 붙으면 날짜 아님
+    if (+m[1] < 1 || +m[1] > 12 || +m[2] < 1 || !validDate(2024, +m[1], +m[2])) return null; // 2024는 윤년이라 2월 29일도 통과
+    return { type: 'md', m: +m[1], d: +m[2] };
+  });
   take(/(\d{1,3})\s*(일|주|주일|개월|달)\s*(뒤|후|이후)/g, m => {
     const n = +m[1];
     if (m[2] === '일') return { type: 'date', date: addDays(today, n) };
@@ -399,7 +421,7 @@ function parseLine(line, now = new Date()) {
 
 /* ---------- 상태 ---------- */
 let items = [], allItems = []; // allItems에는 캘린더에서 지우는 중인 항목도 포함
-const ui = { tab: 'list', month: null, selDay: null, editing: null, confirmClear: false };
+const ui = { tab: 'list', month: null, selDay: null, selEnd: null, editing: null, confirmClear: false };
 try { const t = localStorage.getItem('schedule-tab'); if (['list', 'cal', 'done'].includes(t)) ui.tab = t; } catch (e) {}
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -458,6 +480,8 @@ onAuthStateChanged(auth, user => {
     syncCalendar();
     const form = $('#edit-form');
     if (form && form.contains(document.activeElement)) return; // 고치는 중이면 입력을 날리지 않기
+    const q = $('#quick-entry');
+    if (drag || (q && document.activeElement === q && q.value)) return; // 달력에서 끄는 중이거나 입력 중이면 나중에 그리기
     render();
   }, () => { clearTimeout(timer); setSync('error'); });
 });
@@ -545,11 +569,6 @@ function editHTML(it) {
   </form>`;
 }
 
-const EXAMPLES = ['11월 20일부터 25일까지 출장', '다음주 금요일 오후 3시 팀 회의', '12/3까지 보고서 제출해야됨', '내일 10시 반 장비 점검'];
-function examplesHTML() {
-  return EXAMPLES.map(e => `<button class="chip" data-example="${esc(e)}">${esc(e)}</button>`).join('');
-}
-
 /* ---------- 화면 그리기 ---------- */
 function render() {
   const now = new Date();
@@ -560,9 +579,12 @@ function render() {
   for (const b of document.querySelectorAll('.tab')) b.setAttribute('aria-selected', String(b.dataset.tab === ui.tab));
   const v = $('#view');
   if (Store.mode === 'loading') { v.innerHTML = `<div class="empty">일정을 불러오는 중이에요.</div>`; return; }
+  const q = $('#quick-entry'), qVal = q ? q.value : '', qFocus = !!q && document.activeElement === q;
   if (ui.tab === 'list') v.innerHTML = listHTML(open);
   else if (ui.tab === 'cal') v.innerHTML = calHTML();
   else v.innerHTML = doneHTML(done);
+  const q2 = $('#quick-entry');
+  if (q2) { q2.value = qVal; if (qFocus) q2.focus(); }
   const f = $('#edit-title');
   if (f && document.activeElement === document.body) f.focus();
 }
@@ -570,8 +592,7 @@ function render() {
 function listHTML(open) {
   if (!open.length) {
     return `<div class="empty"><strong>${items.length ? '남은 일이 없어요' : '아직 적어 둔 일정이 없어요'}</strong>
-      <span>위 칸에 아무렇게나 적어 보세요. 아래 예시를 누르면 칸에 채워져요.</span>
-      <div class="hint">${examplesHTML()}</div></div>`;
+      <span>위 칸에 아무렇게나 적어 보세요.</span></div>`;
   }
   const t = sod(new Date()), tk = toKey(t), tom = toKey(addDays(t, 1));
   const sun = toKey(addDays(t, (7 - t.getDay()) % 7)), nextSun = toKey(addDays(t, (7 - t.getDay()) % 7 + 7));
@@ -613,8 +634,9 @@ function calHTML() {
     let cells = '';
     for (let c = 0; c < 7; c++) {
       const d = addDays(ws, c), k = toKey(d);
-      const cls = ['day', d.getMonth() !== m.getMonth() && 'out', c === 0 && 'sun', c === 6 && 'sat', k === tk && 'today'].filter(Boolean).join(' ');
-      cells += `<button class="${cls}" style="grid-column:${c + 1}" data-act="pick-day" data-day="${k}" aria-pressed="${k === ui.selDay}" aria-label="${fmtDay(k)}"><span class="d">${d.getDate()}</span></button>`;
+      const inRange = ui.selEnd && k >= ui.selDay && k <= ui.selEnd;
+      const cls = ['day', d.getMonth() !== m.getMonth() && 'out', c === 0 && 'sun', c === 6 && 'sat', k === tk && 'today', inRange && 'in-range'].filter(Boolean).join(' ');
+      cells += `<button class="${cls}" style="grid-column:${c + 1}" data-act="pick-day" data-day="${k}" aria-pressed="${k === ui.selDay || k === ui.selEnd}" aria-label="${fmtDay(k)}"><span class="d">${d.getDate()}</span></button>`;
     }
     // 주 단위로 막대 줄(lane) 배치
     const evs = dated.filter(i => i.start <= weK && (i.end || i.start) >= wsK)
@@ -635,9 +657,16 @@ function calHTML() {
     hidden.forEach((n, c) => { if (n) bars += `<span class="more" style="grid-column:${c + 1};grid-row:5">+${n}</span>`; });
     html += `<div class="week">${cells}${bars}</div>`;
   }
-  const sel = ui.selDay;
-  const onDay = items.filter(i => i.start && i.start <= sel && (i.end || i.start) >= sel).sort(byWhen);
-  html += `<section class="day-panel group"><h3>${fmtDay(sel)}</h3>${onDay.length ? onDay.map(itemHTML).join('') : '<div class="empty" style="padding:16px 0">이날은 일정이 없어요.</div>'}</section>`;
+  html += `<div class="cal-tip">날짜를 누르면 그 날에 바로 추가할 수 있어요. 길게 누른 채로 끌면 여러 날을 고를 수 있어요.</div>`;
+  const sel = ui.selDay, selEnd = ui.selEnd;
+  const onDay = items.filter(i => i.start && i.start <= (selEnd || sel) && (i.end || i.start) >= sel).sort(byWhen);
+  html += `<section class="day-panel group"><h3>${esc(fmtWhen({ start: sel, end: selEnd }))}</h3>
+    <div class="quick-add">
+      <input type="text" id="quick-entry" enterkeyhint="done" autocomplete="off" aria-label="선택한 날짜에 추가할 일정"
+        placeholder="${selEnd ? '이 기간 일정 (예: 제주 여행)' : '이 날 일정 (예: 3시 회의)'}">
+      <button class="btn solid" data-act="quick-add">추가</button>
+    </div>
+    ${onDay.length ? onDay.map(itemHTML).join('') : `<div class="empty" style="padding:16px 0">${selEnd ? '이 기간에는' : '이날은'} 일정이 없어요.</div>`}</section>`;
   return html;
 }
 
@@ -686,7 +715,6 @@ entry.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); touchCalendar(); submitEntry(); }
 });
 $('#add-btn').addEventListener('click', () => { touchCalendar(); submitEntry(); });
-$('#hint').insertAdjacentHTML('beforeend', examplesHTML());
 
 let toastTimer;
 function toast(msg, action) {
@@ -699,8 +727,6 @@ function toast(msg, action) {
 }
 
 document.addEventListener('click', async e => {
-  const ex = e.target.closest('[data-example]');
-  if (ex) { entry.value = ex.dataset.example; renderPreview(); entry.focus(); return; }
   const tab = e.target.closest('.tab');
   if (tab) {
     ui.tab = tab.dataset.tab; ui.editing = null; ui.confirmClear = false;
@@ -710,7 +736,7 @@ document.addEventListener('click', async e => {
   const el = e.target.closest('[data-act]');
   if (!el) return;
   const id = el.dataset.id, it = items.find(x => x.id === id);
-  if (['toggle', 'delete', 'clear-done-yes'].includes(el.dataset.act)) touchCalendar();
+  if (['toggle', 'delete', 'clear-done-yes', 'quick-add'].includes(el.dataset.act)) touchCalendar();
   switch (el.dataset.act) {
     case 'cal-sync': calPausedUntil = 0; tokenOk() ? syncCalendar() : requestToken(); break;
     case 'toggle':
@@ -730,10 +756,17 @@ document.addEventListener('click', async e => {
       });
       break;
     }
-    case 'pick-day': ui.selDay = el.dataset.day; ui.editing = null; render(); break;
+    case 'pick-day': {
+      // 폰에서는 처음 누르면 그날 일정만 보여주고, 같은 날을 한 번 더 누르면 입력칸으로 가요 (키보드가 갑자기 뜨지 않게)
+      const again = el.dataset.day === ui.selDay && !ui.selEnd;
+      ui.selDay = el.dataset.day; ui.selEnd = null; ui.editing = null; render();
+      if (again || matchMedia('(pointer: fine)').matches) $('#quick-entry')?.focus();
+      break;
+    }
+    case 'quick-add': quickAdd(); break;
     case 'prev-month': ui.month = new Date(ui.month.getFullYear(), ui.month.getMonth() - 1, 1); render(); break;
     case 'next-month': ui.month = new Date(ui.month.getFullYear(), ui.month.getMonth() + 1, 1); render(); break;
-    case 'this-month': { const t = new Date(); ui.month = new Date(t.getFullYear(), t.getMonth(), 1); ui.selDay = todayKey(); render(); break; }
+    case 'this-month': { const t = new Date(); ui.month = new Date(t.getFullYear(), t.getMonth(), 1); ui.selDay = todayKey(); ui.selEnd = null; render(); break; }
     case 'clear-done': ui.confirmClear = true; render(); break;
     case 'clear-done-no': ui.confirmClear = false; render(); break;
     case 'clear-done-yes': {
@@ -760,6 +793,91 @@ document.addEventListener('submit', async e => {
   if (await safe(Store.update(id, patch))) toast('수정했어요');
   render();
 });
+
+/* ---------- 달력: 날짜에 바로 추가, 끌어서 기간 고르기 ---------- */
+// 고른 날짜(또는 기간)에 넣어요. 글에서는 제목·시간·마감만 가져오고 날짜는 달력에서 고른 걸 써요.
+function quickAdd() {
+  const inp = $('#quick-entry');
+  if (!inp) return;
+  const text = inp.value.trim();
+  if (!text) { inp.focus(); return; }
+  const r = parseLine(text);
+  inp.value = '';
+  Store.add({
+    title: r.title, start: ui.selDay, end: ui.selEnd || null, due: !ui.selEnd && r.due,
+    time: r.time, endTime: r.endTime, raw: text, done: false, createdAt: new Date().toISOString(),
+  });
+  toast(`${fmtWhen({ start: ui.selDay, end: ui.selEnd })}에 추가했어요`);
+}
+document.addEventListener('keydown', e => {
+  if (e.target.id !== 'quick-entry' || e.key !== 'Enter' || e.isComposing || e.keyCode === 229) return;
+  e.preventDefault(); touchCalendar(); quickAdd();
+});
+
+let drag = null; // { a: 시작 날짜, b: 지금 손가락이 있는 날짜, mouse }
+const dayAt = (x, y) => document.elementFromPoint(x, y)?.closest('.day[data-day]');
+const dragSpan = () => drag.a <= drag.b ? [drag.a, drag.b] : [drag.b, drag.a];
+function paintDrag() {
+  const [s, e] = dragSpan();
+  for (const d of document.querySelectorAll('.day[data-day]')) d.classList.toggle('dragging', d.dataset.day >= s && d.dataset.day <= e);
+}
+function moveDrag(x, y) {
+  const d = dayAt(x, y);
+  if (d && d.dataset.day !== drag.b) { drag.b = d.dataset.day; drag.moved = true; paintDrag(); }
+}
+function finishDrag() {
+  const [s, e] = dragSpan();
+  drag = null;
+  ui.selDay = s; ui.selEnd = e !== s ? e : null; ui.editing = null;
+  render();
+  $('#quick-entry')?.focus();
+}
+
+// 마우스: 누른 채로 바로 끌기
+document.addEventListener('pointerdown', e => {
+  if (e.pointerType !== 'mouse' || e.button !== 0) return;
+  const d = e.target.closest('.day[data-day]');
+  if (!d) return;
+  e.preventDefault(); // 끄는 동안 글자가 선택되지 않게
+  drag = { a: d.dataset.day, b: d.dataset.day, mouse: true, moved: false };
+});
+document.addEventListener('pointermove', e => { if (drag?.mouse) moveDrag(e.clientX, e.clientY); });
+document.addEventListener('pointerup', () => {
+  if (!drag?.mouse) return;
+  if (drag.moved && drag.a !== drag.b) finishDrag(); else drag = null; // 그냥 클릭이면 원래대로 날짜 선택
+});
+
+// 터치: 살짝 길게(0.3초) 누른 뒤 끌기. 바로 끌면 원래처럼 화면이 스크롤돼요.
+let press = null;
+document.addEventListener('touchstart', e => {
+  const d = e.target.closest?.('.day[data-day]');
+  if (press) clearTimeout(press.timer);
+  press = null;
+  if (!d || e.touches.length > 1) return;
+  const t = e.touches[0], day = d.dataset.day;
+  press = { x: t.clientX, y: t.clientY, timer: setTimeout(() => {
+    press = null;
+    drag = { a: day, b: day, mouse: false };
+    paintDrag();
+    navigator.vibrate?.(15);
+  }, 300) };
+}, { passive: true });
+document.addEventListener('touchmove', e => {
+  if (drag && !drag.mouse) { e.preventDefault(); moveDrag(e.touches[0].clientX, e.touches[0].clientY); return; }
+  if (press) {
+    const t = e.touches[0];
+    if (Math.hypot(t.clientX - press.x, t.clientY - press.y) > 10) { clearTimeout(press.timer); press = null; }
+  }
+}, { passive: false });
+document.addEventListener('touchend', e => {
+  if (press) { clearTimeout(press.timer); press = null; }
+  if (drag && !drag.mouse) { e.preventDefault(); finishDrag(); }
+}, { passive: false });
+document.addEventListener('touchcancel', () => {
+  if (press) { clearTimeout(press.timer); press = null; }
+  if (drag && !drag.mouse) { drag = null; render(); }
+});
+document.addEventListener('contextmenu', e => { if (e.target.closest?.('.week')) e.preventDefault(); }); // 길게 누를 때 메뉴 안 뜨게
 
 /* ---------- 구글 캘린더 연동 (일정 수첩 → 기본 캘린더, 한 방향) ---------- */
 const GOOGLE_CLIENT_ID = '921720714025-p6r6vg4og5vbd7k8c84b8f60le5uur6o.apps.googleusercontent.com';
@@ -880,7 +998,11 @@ function removeItem(it) {
 function renderCal() {
   const btn = $('#cal-btn');
   btn.hidden = !GOOGLE_CLIENT_ID || Store.mode === 'signedout';
-  btn.textContent = calOn() ? '캘린더 연결 끊기' : '캘린더 연결';
+  const on = calOn();
+  btn.dataset.on = on ? '1' : '0';
+  btn.title = on ? '누르면 구글 캘린더 연결을 끊어요' : '일정을 구글 캘린더에도 넣어요';
+  btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>'
+    + (on ? '캘린더 연결됨 · 끊기' : '구글 캘린더 연결');
   const box = $('#cal-notice');
   if (!GOOGLE_CLIENT_ID || !calOn() || Store.mode !== 'ready') { box.innerHTML = ''; return; }
   const n = allItems.filter(needsCal).length;
