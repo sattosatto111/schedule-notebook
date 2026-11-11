@@ -712,7 +712,7 @@ document.addEventListener('click', async e => {
   const id = el.dataset.id, it = items.find(x => x.id === id);
   if (['toggle', 'delete', 'clear-done-yes'].includes(el.dataset.act)) touchCalendar();
   switch (el.dataset.act) {
-    case 'cal-sync': tokenOk() ? syncCalendar() : requestToken(); break;
+    case 'cal-sync': calPausedUntil = 0; tokenOk() ? syncCalendar() : requestToken(); break;
     case 'toggle':
       if (it) await safe(Store.update(id, it.done ? { done: false, doneAt: null } : { done: true, doneAt: new Date().toISOString() }));
       break;

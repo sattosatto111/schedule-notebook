@@ -1,6 +1,6 @@
-// 앱 파일을 폰에 저장해 두고, 인터넷이 없어도 열리게 해 주는 코드.
-// 앱을 고칠 때마다 아래 버전 숫자를 올려 주세요.
-const CACHE = 'schedule-v2';
+﻿// ???뚯씪???곗뿉 ??ν빐 ?먭퀬, ?명꽣?룹씠 ?놁뼱???대━寃???二쇰뒗 肄붾뱶.
+// ?깆쓣 怨좎튌 ?뚮쭏???꾨옒 踰꾩쟾 ?レ옄瑜??щ젮 二쇱꽭??
+const CACHE = 'schedule-v3';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 const CDN = ['https://www.gstatic.com/firebasejs/', 'https://fonts.googleapis.com/', 'https://fonts.gstatic.com/'];
 
@@ -16,8 +16,8 @@ self.addEventListener('activate', e => {
   );
 });
 
-// 저장해 둔 걸 먼저 보여주고, 뒤에서 새 버전을 받아 둬요 (다음에 열 때 반영).
-// Firebase 로그인·데이터 통신은 건드리지 않아요.
+// ??ν빐 ??嫄?癒쇱? 蹂댁뿬二쇨퀬, ?ㅼ뿉????踰꾩쟾??諛쏆븘 ?ъ슂 (?ㅼ쓬??????諛섏쁺).
+// Firebase 濡쒓렇?맞룸뜲?댄꽣 ?듭떊? 嫄대뱶由ъ? ?딆븘??
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
