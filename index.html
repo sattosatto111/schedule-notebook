@@ -156,7 +156,6 @@ textarea#entry { flex: 1; min-width: 0; resize: none; border: 1px solid var(--li
 .bar.cont-r { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: 0; }
 .bar.done { background: transparent; color: var(--muted); text-decoration: line-through; box-shadow: inset 0 0 0 1px var(--line); }
 .bar.late { background: var(--danger-soft); color: var(--danger); }
-.more { pointer-events: none; z-index: 1; font-size: 10.5px; color: var(--muted); text-align: center; line-height: 16px; }
 .week { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .day.in-range, .day.dragging { background: var(--accent-soft); }
 .day.dragging { box-shadow: inset 0 0 0 1.5px var(--accent); }
@@ -641,7 +640,7 @@ function calHTML() {
     // 주 단위로 막대 줄(lane) 배치
     const evs = dated.filter(i => i.start <= weK && (i.end || i.start) >= wsK)
       .sort((a, b) => a.start < b.start ? -1 : a.start > b.start ? 1 : ((b.end || b.start) > (a.end || a.start) ? 1 : -1));
-    const lanes = [], hidden = Array(7).fill(0);
+    const lanes = [];
     let bars = '';
     for (const it of evs) {
       const s = it.start < wsK ? 0 : dayDiff(wsK, it.start);
@@ -649,13 +648,12 @@ function calHTML() {
       let lane = lanes.findIndex(l => l.every(x => x < s || x > e));
       if (lane === -1) { lanes.push([]); lane = lanes.length - 1; }
       for (let x = s; x <= e; x++) lanes[lane].push(x);
-      if (lane > 2) { for (let x = s; x <= e; x++) hidden[x]++; continue; }
       const late = !it.done && (it.end || it.start) < tk;
       const cls = ['bar', it.done && 'done', late && 'late', it.start < wsK && 'cont-l', (it.end || it.start) > weK && 'cont-r'].filter(Boolean).join(' ');
       bars += `<div class="${cls}" style="grid-column:${s + 1} / span ${e - s + 1};grid-row:${lane + 2}">${esc((it.time ? it.time + ' ' : '') + it.title)}</div>`;
     }
-    hidden.forEach((n, c) => { if (n) bars += `<span class="more" style="grid-column:${c + 1};grid-row:5">+${n}</span>`; });
-    html += `<div class="week">${cells}${bars}</div>`;
+    // 일정이 많은 주는 줄 수만큼 칸을 늘려서 전부 보여줘요 (최소 3줄)
+    html += `<div class="week" style="grid-template-rows:26px repeat(${Math.max(3, lanes.length)}, 19px) 6px">${cells}${bars}</div>`;
   }
   html += `<div class="cal-tip">날짜를 누르면 그 날에 바로 추가할 수 있어요. 길게 누른 채로 끌면 여러 날을 고를 수 있어요.</div>`;
   const sel = ui.selDay, selEnd = ui.selEnd;
