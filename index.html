@@ -80,6 +80,8 @@ h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
 .composer { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .composer-row { display: flex; gap: 8px; align-items: flex-end; }
 textarea#entry { flex: 1; min-width: 0; resize: none; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); font: inherit; padding: 10px 12px; min-height: 46px; max-height: 180px; line-height: 1.45; }
+.btn-mic { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px; width: 46px; height: 46px; font-size: 18px; flex: none; }
+.btn-mic.on { background: var(--accent); border-color: var(--accent); }
 .btn-primary { border: 0; background: var(--accent); color: var(--surface); border-radius: 10px; padding: 0 18px; height: 46px; font-weight: 700; flex: none; }
 .btn-primary:disabled { opacity: .45; cursor: default; }
 .hint { font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -230,6 +232,7 @@ textarea#entry { flex: 1; min-width: 0; resize: none; border: 1px solid var(--li
   <section class="composer" aria-label="일정 적기">
     <div class="composer-row">
       <textarea id="entry" rows="1" placeholder="11월 20일부터 25일까지 출장" aria-label="일정 내용"></textarea>
+      <button class="btn-mic" id="mic-btn" type="button" aria-label="말로 입력" hidden>🎤</button>
       <button class="btn-primary" id="add-btn" disabled>추가</button>
     </div>
     <div class="preview" id="preview" hidden></div>
@@ -937,6 +940,7 @@ async function submitEntry() {
   const lines = linesOf(entry.value);
   if (!lines.length) return;
   entry.value = '';
+  lastLen = 0;
   renderPreview();
   let ok = 0;
   for (const l of lines) {
@@ -958,6 +962,76 @@ entry.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); touchCalendar(); submitEntry(); }
 });
 $('#add-btn').addEventListener('click', () => { touchCalendar(); submitEntry(); });
+
+/* ---------- 말로 입력: 끝에 "추가"면 바로 추가, "완료"면 그 일정 완료 ---------- */
+const ADD_CMD = /\s+추가(해|해\s*줘|해\s*주세요|하기)?[.!?\s]*$/;
+const DONE_CMD = /\s+완료(해|해\s*줘|해\s*주세요|했어|했음|하기|됨)?[.!?\s]*$/;
+const normT = s => s.toLowerCase().replace(/[\s.,!?~\-·]/g, '');
+// 말한 내용과 제목이 맞는 미완료 일정을 찾아 완료 (반복 일정은 다음 회차)
+function completeByText(text) {
+  const qs = [...new Set([normT(text), normT(parseLine(text).title)])].filter(q => q.length >= 2);
+  let best = null;
+  for (const it of items) {
+    const v = listView(it);
+    if (v.done || v.ended) continue;
+    const t = normT(it.title || '');
+    if (!t) continue;
+    const score = qs.some(q => q === t) ? 3 : qs.some(q => q.includes(t) || t.includes(q)) ? 2 : 0;
+    if (!score) continue;
+    const key = (v.start || '9999-99-99') + (v.time || '99:99');
+    if (!best || score > best.score || (score === best.score && key < best.key)) best = { score, key, it, v };
+  }
+  if (!best) { toast(`못 찾았어요: ${text}`); return; }
+  const { it, v } = best;
+  if (it.repeat) {
+    const k = v.start, before = it.doneDates || [];
+    Store.update(it.id, { doneDates: [...new Set([...before, k])].sort() });
+    toast(`완료: ${it.title} (${fmtDay(k)})`, () => Store.update(it.id, { doneDates: before }));
+  } else {
+    Store.update(it.id, { done: true, doneAt: new Date().toISOString() });
+    toast(`완료: ${it.title}`, () => Store.update(it.id, { done: false, doneAt: null }));
+  }
+}
+// 한 줄 글이 "추가"/"완료"로 끝나면 처리하고 true
+function voiceCommand(text) {
+  if (text.includes('\n')) return false;
+  for (const [re, run] of [[DONE_CMD, completeByText], [ADD_CMD, body => { entry.value = body; renderPreview(); touchCalendar(); submitEntry(); }]]) {
+    if (!re.test(text)) continue;
+    const body = text.replace(re, '').trim();
+    if (!body) return false;
+    entry.value = ''; renderPreview();
+    run(body);
+    return true;
+  }
+  return false;
+}
+// 키보드 음성입력은 글자가 한 번에 여러 개 들어와요. 그때만 명령을 봐요 (손으로 칠 때는 해당 없음).
+let lastLen = 0;
+entry.addEventListener('input', () => {
+  const grew = entry.value.length - lastLen;
+  lastLen = entry.value.length;
+  if (grew >= 2 && voiceCommand(entry.value.trim())) lastLen = 0;
+});
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SR) {
+  const mic = $('#mic-btn');
+  mic.hidden = false;
+  let rec = null;
+  mic.addEventListener('click', () => {
+    if (rec) { rec.stop(); return; }
+    rec = new SR();
+    rec.lang = 'ko-KR';
+    rec.interimResults = false;
+    rec.onresult = e => {
+      const text = e.results[0][0].transcript.trim();
+      if (!voiceCommand(text)) { entry.value = text; lastLen = text.length; renderPreview(); entry.focus(); }
+    };
+    rec.onerror = e => { if (e.error === 'not-allowed') toast('마이크 권한을 허용해 주세요'); };
+    rec.onend = () => { rec = null; mic.classList.remove('on'); };
+    mic.classList.add('on');
+    rec.start();
+  });
+}
 
 let toastTimer;
 function toast(msg, action) {
